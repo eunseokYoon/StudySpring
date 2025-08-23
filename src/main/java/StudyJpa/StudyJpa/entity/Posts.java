@@ -13,6 +13,12 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Posts extends BaseEntity{
+    
+    public Posts(String title, String content, User user) {
+        this.title = title;
+        this.content = content;
+        this.user = user;
+    }
     @Id
     @GeneratedValue
     @Column(name = "posts_id")
@@ -27,6 +33,4 @@ public class Posts extends BaseEntity{
     
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comments> comments = new ArrayList<>();
-
-
 }

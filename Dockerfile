@@ -1,39 +1,30 @@
-# Multi-stage build for Java Spring Boot application
-FROM gradle:7.6-jdk17 AS build
+# Multi-stage build
+FROM gradle:8.5-jdk17 AS build
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy gradle wrapper and build files
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
+# gradle 파일들 복사
+COPY build.gradle settings.gradle ./
+COPY gradle gradle/
 
-# Copy source code
-COPY src src
+# 소스 코드 복사
+COPY src src/
 
-# Build the application
-RUN chmod +x ./gradlew
-RUN ./gradlew build -x test
+# 애플리케이션 빌드
+RUN gradle build -x test --no-daemon
 
 # Runtime stage
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Copy the built jar from build stage
+# 빌드된 jar 파일 복사
 COPY --from=build /app/build/libs/*.jar app.jar
 
-# Create non-root user for security
-RUN addgroup --system spring && adduser --system spring --ingroup spring
-USER spring:spring
-
-# Expose port
+# 포트 노출
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
-
-# Run the application
+# 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]
